@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code Tips & Tricks — CCCL Dailys</title>
+  <meta name="description" content="Inaugural CCCL Daily session: prompt engineering, skills explained, live demo building the /cc-tips plugin.">
+  <link rel="icon" href="https://cccl.ai/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --navy: #0f0f1e;
+      --navy-mid: #161630;
+      --navy-light: #1e1e3a;
+      --surface: #232346;
+      --copper: #e86c00;
+      --copper-light: #f0933a;
+      --copper-dim: #d47b2a;
+      --gold: #f5c778;
+      --text: #e8e6e3;
+      --text-secondary: #a09caf;
+      --text-muted: #6b6780;
+      --border: rgba(255,255,255,0.06);
+      --border-strong: rgba(255,255,255,0.1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--navy);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.7;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(232,108,0,0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(100,80,200,0.03) 0%, transparent 50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+      background-size: 60px 60px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ─── Header ─── */
+    header {
+      padding: 40px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      transition: color 0.3s ease;
+    }
+
+    .back-link:hover { color: var(--copper); }
+
+    .header-logo {
+      height: 28px;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+    }
+
+    .header-logo:hover { opacity: 1; }
+
+    /* ─── Report Header ─── */
+    .report-header {
+      margin-bottom: 48px;
+      padding-bottom: 36px;
+      border-bottom: 1px solid var(--border);
+      animation: fadeIn 0.6s ease both;
+    }
+
+    .report-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--copper);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .report-date::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: var(--copper);
+    }
+
+    .report-header h1 {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: clamp(36px, 5vw, 52px);
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .meta-item {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .meta-item strong {
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .meta-item a {
+      color: var(--copper-dim);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(232,108,0,0.2);
+      transition: border-color 0.3s;
+    }
+
+    .meta-item a:hover { border-color: var(--copper); }
+
+    /* ─── Content ─── */
+    .report-content {
+      animation: fadeIn 0.6s ease 0.15s both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .report-content h2 {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--text);
+      margin-top: 56px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .report-content h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-top: 40px;
+      margin-bottom: 16px;
+    }
+
+    .report-content h4 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 28px;
+      margin-bottom: 12px;
+    }
+
+    .report-content p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.7;
+    }
+
+    .report-content ul {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+
+    .report-content ul li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 10px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    .report-content ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--copper-dim);
+      opacity: 0.6;
+    }
+
+    .report-content a {
+      color: var(--copper);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(232,108,0,0.25);
+      transition: border-color 0.3s;
+    }
+
+    .report-content a:hover { border-color: var(--copper); }
+
+    .report-content code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9em;
+      background: rgba(255,255,255,0.05);
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: var(--gold);
+    }
+
+    /* ─── Attendees Table ─── */
+    .attendees-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 14px;
+    }
+
+    .attendees-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-strong);
+    }
+
+    .attendees-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .attendees-table tr:hover td {
+      background: rgba(255,255,255,0.015);
+    }
+
+    .attendees-table td:first-child {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ─── Action Items ─── */
+    .action-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 15px;
+      color: var(--text-secondary);
+    }
+
+    .action-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--copper-dim);
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      opacity: 0.5;
+    }
+
+    .action-item strong {
+      color: var(--copper);
+      font-weight: 600;
+    }
+
+    /* ─── Topic Card ─── */
+    .topic-card {
+      background: linear-gradient(135deg, var(--navy-light), var(--navy-mid));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 16px;
+    }
+
+    .topic-card h4 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    .topic-card ul { margin-bottom: 0; }
+    .topic-card ul li:last-child { margin-bottom: 0; }
+
+    /* ─── Links Section ─── */
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .link-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .link-card:hover {
+      border-color: var(--copper-dim);
+      background: rgba(232,108,0,0.04);
+      color: var(--text);
+    }
+
+    .link-icon {
+      font-size: 18px;
+    }
+
+    /* ─── Footer ─── */
+    footer {
+      margin-top: 80px;
+      padding: 32px 0 40px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--copper-dim);
+      text-decoration: none;
+    }
+
+    @media (max-width: 640px) {
+      .meta-grid { grid-template-columns: 1fr; }
+      .topic-card { padding: 18px 20px; }
+      header { flex-direction: column; gap: 12px; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <a href="./" class="back-link">← All Sessions</a>
+      <a href="https://cccl.ai"><img src="https://cccl.ai/logos/cccl-header-dark.svg" alt="CCCL" class="header-logo"></a>
+    </header>
+
+    <div class="report-header">
+      <div class="report-date">Friday 20 March 2026</div>
+      <h1>Claude Code Tips & Tricks</h1>
+      <div class="meta-grid">
+        <div class="meta-item">
+          <strong>Format</strong>
+          Online (Google Meet)
+        </div>
+        <div class="meta-item">
+          <strong>Duration</strong>
+          18:00–18:30 GMT
+        </div>
+        <div class="meta-item">
+          <strong>Attendees</strong>
+          9 (8 + host)
+        </div>
+        <div class="meta-item">
+          <strong>Resources</strong>
+          <a href="https://docs.google.com/document/d/1clCPbtUqo__B0T1CAuKXtqc5jH_UEojuGpU4X_hjbhQ/edit?tab=t.k709w4fskz3a">Gemini Notes</a> · <a href="https://luma.com/zoo1cp4r">Luma</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-content">
+
+      <h2>Attendees</h2>
+      <table class="attendees-table">
+        <thead>
+          <tr><th>Name</th><th>Background</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Vikram Pawar</td><td>Host — backend engineer, tech lead, trainer</td></tr>
+          <tr><td>Piyush Nahata</td><td>Project management & hospitality, now at Salesforce, pivoting to entrepreneurship</td></tr>
+          <tr><td>Anil Maindola</td><td>Java background, moved into data engineering (Azure Databricks), exploring Claude Code</td></tr>
+          <tr><td>Mr Gurmit Chouhan</td><td>—</td></tr>
+          <tr><td>Debasmita Dash</td><td>Engineering & marketing background, selling automation to businesses (martech)</td></tr>
+          <tr><td>Julio M</td><td>Software engineer (Salesforce & legal tech), keeping up with rapid AI changes</td></tr>
+          <tr><td>Aadarsh Jain</td><td>Software engineer (8 years), pursuing Master's in AI</td></tr>
+          <tr><td>Anand A</td><td>Senior developer in investment banking, learning AI architecture & design patterns</td></tr>
+          <tr><td>Erica Tsai</td><td>Product manager in legal tech, new to Claude Code</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Session Summary</h2>
+      <p>The inaugural CCCL Daily kicked off with introductions and quickly moved into practical discussion about prompt engineering techniques and Claude Code skills.</p>
+
+      <h3>Key Topics Discussed</h3>
+
+      <div class="topic-card">
+        <h4>1. Prompt Engineering & Model Requirements</h4>
+        <ul>
+          <li>Splitting large work requests into smaller, manageable prompts yields better results than one massive prompt</li>
+          <li>Current model intelligence has reduced the need for elaborate prompt engineering</li>
+          <li>Using a PRD (Product Requirements Document) formatted as markdown and passing it to Claude is an effective approach</li>
+        </ul>
+      </div>
+
+      <div class="topic-card">
+        <h4>2. Advanced Techniques for Gathering Requirements</h4>
+        <ul>
+          <li>Instead of the user trying to anticipate everything the model needs, ask Claude to "interview" you — let it determine what information and structure it needs</li>
+          <li>Vikram introduced the "ask user tool" concept: prompt Claude to ask a structured list of questions on any topic and then generate a specification — see <a href="https://x.com/trq212/status/2005315275026260309">AskUserTool demo by @trq212</a></li>
+        </ul>
+      </div>
+
+      <div class="topic-card">
+        <h4>3. What Are Claude Code Skills?</h4>
+        <ul>
+          <li>Skills are the latest iteration of tools designed to store and utilize prompts, evolving from earlier methods like sub-agents and commands</li>
+          <li>Think of them as a file or package manager that can add roles (e.g., front-end developer) to models, enabling complex tasks and runnable code generation</li>
+          <li>Skills = packaged prompt + code; plugins are an easy way to install a skill</li>
+          <li>Official resource: <a href="https://www.youtube.com/watch?v=rK9iVRxJ9CU">Skills vs MCP Servers</a> — Claude channel (Anthropic), <a href="https://www.youtube.com/playlist?list=PLmWCw1CzcFil3WKUe83I1Fjhf5CWcobOg">full playlist</a></li>
+        </ul>
+      </div>
+
+      <div class="topic-card">
+        <h4>4. Live Demo: Building the <code>/cc-tips</code> Skill</h4>
+        <ul>
+          <li>Vikram created and ran a skill that generates a categorized tips markdown file, then used Claude Code to upload it to GitHub — all within minutes</li>
+          <li>The skill searches the web for Claude Code tips from Anthropic engineers, official docs, and community experts, verifies source links, and organizes tips into Basic / Intermediate / Advanced</li>
+        </ul>
+      </div>
+
+      <div class="topic-card">
+        <h4>5. Business Challenges & Future Topics</h4>
+        <ul>
+          <li>Piyush shared a challenge: developing and hosting an HTML website for daily tiffin delivery — needs help with hosting, SEO, and marketing</li>
+          <li>The group acknowledged these are complex topics warranting dedicated deep-dive sessions</li>
+        </ul>
+      </div>
+
+      <h2>Action Items</h2>
+      <div class="action-item">
+        <div class="action-checkbox"></div>
+        <span><strong>Vikram</strong> — Share the <code>/cc-tips</code> plugin link in the Slack channel</span>
+      </div>
+      <div class="action-item">
+        <div class="action-checkbox"></div>
+        <span><strong>Vikram</strong> — Review meeting recording to identify and prioritize discussed questions, then schedule targeted deep-dive sessions (hosting, SEO, marketing)</span>
+      </div>
+      <div class="action-item">
+        <div class="action-checkbox"></div>
+        <span><strong>Vikram</strong> — Plan future dailys addressing participant challenges</span>
+      </div>
+
+      <h2>Links</h2>
+      <div class="links-grid">
+        <a href="https://cccl.ai/slack" class="link-card">
+          <span class="link-icon">💬</span> Slack Community
+        </a>
+        <a href="https://github.com/vikrampawar/cccl-dailys" class="link-card">
+          <span class="link-icon">📦</span> Plugin Repo
+        </a>
+        <a href="https://luma.com/claude.code.central.london" class="link-card">
+          <span class="link-icon">📅</span> Upcoming Events
+        </a>
+      </div>
+    </div>
+
+    <footer>
+      <a href="https://cccl.ai">Claude Code Central London</a> · <a href="./">All Dailys</a>
+    </footer>
+  </div>
+</body>
+</html>
